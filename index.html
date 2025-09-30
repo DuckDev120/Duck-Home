@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agam Space</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* רקע עם גרדיאנטים אנימטיים */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 226, 0.2) 0%, transparent 50%);
+            z-index: -2;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { 
+                background-position: 0% 0%, 100% 100%, 50% 50%;
+            }
+            50% { 
+                background-position: 100% 100%, 0% 0%, 100% 100%;
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding-top: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            animation: float 3s ease-in-out infinite;
+            background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcf7f, #4d96ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 300% 300%;
+            animation: float 3s ease-in-out infinite, gradientShiftText 8s ease infinite;
+        }
+
+        @keyframes gradientShiftText {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .container {
+            perspective: 2000px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 60px;
+            justify-content: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card {
+            width: 300px;
+            height: 180px;
+            position: relative;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            filter: drop-shadow(0 25px 50px rgba(0, 0, 0, 0.5));
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1), transparent);
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.6s;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card:hover {
+            transform: translateY(-30px) rotateX(15deg) scale(1.08);
+            filter: drop-shadow(0 40px 80px rgba(0, 0, 0, 0.6));
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+        }
+
+        .card-front {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            text-decoration: none;
+            color: #333;
+            transform: translateZ(25px);
+            transition: all 0.4s;
+            overflow: hidden;
+            border: 3px solid rgba(255,255,255,0.2);
+        }
+
+        .card-front::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: rotate(45deg);
+            transition: all 0.6s;
+        }
+
+        .card:hover .card-front::before {
+            left: 100%;
+        }
+
+        .card-front::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.2), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .card:hover .card-front::after {
+            opacity: 1;
+        }
+
+        /* צדדים תלת ממדיים */
+        .card-side {
+            position: absolute;
+            background: linear-gradient(135deg, #d0d0d0 0%, #a0a0a0 100%);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        .card-side.left {
+            width: 25px;
+            height: 100%;
+            right: 100%;
+            top: 0;
+            transform-origin: right;
+            transform: rotateY(90deg);
+            border-radius: 20px 0 0 20px;
+        }
+
+        .card-side.right {
+            width: 25px;
+            height: 100%;
+            left: 100%;
+            top: 0;
+            transform-origin: left;
+            transform: rotateY(-90deg);
+            border-radius: 0 20px 20px 0;
+        }
+
+        .card-side.top {
+            width: 100%;
+            height: 25px;
+            bottom: 100%;
+            left: 0;
+            transform-origin: bottom;
+            transform: rotateX(90deg);
+            border-radius: 20px 20px 0 0;
+        }
+
+        .card-side.bottom {
+            width: 100%;
+            height: 25px;
+            top: 100%;
+            left: 0;
+            transform-origin: top;
+            transform: rotateX(-90deg);
+            border-radius: 0 0 20px 20px;
+        }
+
+        .card-side.back {
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            transform: translateZ(-25px);
+            border-radius: 20px;
+            background: linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%);
+        }
+
+        .icon-container {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .card:hover .icon-container {
+            transform: scale(1.2) rotateY(360deg);
+            transition: all 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .icon {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));
+            transition: all 0.4s;
+        }
+
+        .card:hover .icon {
+            filter: drop-shadow(0 10px 25px rgba(0,0,0,0.4)) brightness(1.1);
+        }
+
+        .label {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.4s;
+            position: relative;
+        }
+
+        .card:hover .label {
+            transform: scale(1.1);
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .label::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%) scaleX(0);
+            width: 80%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, currentColor, transparent);
+            transition: transform 0.4s;
+        }
+
+        .card:hover .label::after {
+            transform: translateX(-50%) scaleX(1);
+        }
+
+        /* אנימציות נוספות */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .card:hover {
+            animation: none;
+        }
+
+        .card:active {
+            transform: translateY(-25px) rotateX(10deg) scale(1.05);
+            transition: all 0.1s;
+        }
+
+        /* גלואו אפקט */
+        .card-front {
+            box-shadow: 
+                0 0 20px rgba(255,255,255,0.1),
+                inset 0 0 20px rgba(255,255,255,0.1);
+        }
+
+        .card:hover .card-front {
+            box-shadow: 
+                0 0 40px rgba(255,255,255,0.3),
+                inset 0 0 30px rgba(255,255,255,0.2),
+                0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        /* צבעים מותאמים לכל כרטיס */
+        .youtube .card-front {
+            background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+        }
+
+        .youtube .label {
+            color: white;
+        }
+
+        .discord .card-front {
+            background: linear-gradient(135deg, #5865f2 0%, #4752c4 100%);
+        }
+
+        .discord .label {
+            color: white;
+        }
+
+        .minecraft .card-front {
+            background: linear-gradient(135deg, #00aa00 0%, #008800 100%);
+        }
+
+        .minecraft .label {
+            color: white;
+        }
+
+        .spotify .card-front {
+            background: linear-gradient(135deg, #1DB954 0%, #1ed760 100%);
+        }
+
+        .spotify .label {
+            color: white;
+        }
+
+        .namemc .card-front {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+        }
+
+        .namemc .label {
+            color: white;
+        }
+
+        /* אפקט ניאון בהובר */
+        .youtube:hover {
+            filter: drop-shadow(0 0 30px rgba(255, 0, 0, 0.8));
+        }
+
+        .discord:hover {
+            filter: drop-shadow(0 0 30px rgba(88, 101, 242, 0.8));
+        }
+
+        .minecraft:hover {
+            filter: drop-shadow(0 0 30px rgba(0, 170, 0, 0.8));
+        }
+
+        .spotify:hover {
+            filter: drop-shadow(0 0 30px rgba(29, 185, 84, 0.8));
+        }
+
+        .namemc:hover {
+            filter: drop-shadow(0 0 30px rgba(255, 107, 53, 0.8));
+        }
+
+        /* רספונסיביות */
+        @media (max-width: 768px) {
+            .card {
+                width: 260px;
+                height: 160px;
+            }
+
+            .icon-container {
+                width: 70px;
+                height: 70px;
+            }
+
+            .label {
+                font-size: 18px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+
+        /* אפקט חלקיקים ברקע */
+        @keyframes particleFloat {
+            0%, 100% { 
+                transform: translateY(0) translateX(0) scale(1);
+                opacity: 0.3;
+            }
+            50% { 
+                transform: translateY(-100px) translateX(50px) scale(1.5);
+                opacity: 0.6;
+            }
+        }
+
+        .particle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0.3;
+            animation: particleFloat 6s infinite ease-in-out;
+            z-index: -1;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* רקע עם נקודות מחוברות */
+        .connections {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .node {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+        }
+
+        .connection {
+            position: absolute;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform-origin: 0 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- רקע עם גרדיאנטים אנימטיים -->
+    <div class="bg-gradient"></div>
+    
+    <!-- רקע עם נקודות מחוברות -->
+    <div class="connections" id="connections"></div>
+    
+    <!-- חלקיקים דקורטיביים -->
+    <script>
+        // יצירת חלקיקים
+        for(let i = 0; i < 20; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 6 + 's';
+            particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+            document.body.appendChild(particle);
+        }
+
+        // יצירת רקע עם נקודות מחוברות
+        const connections = document.getElementById('connections');
+        const nodes = [];
+        const nodeCount = 30;
+
+        // יצירת נקודות
+        for (let i = 0; i < nodeCount; i++) {
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.style.left = Math.random() * 100 + '%';
+            node.style.top = Math.random() * 100 + '%';
+            node.style.animationDelay = Math.random() * 5 + 's';
+            connections.appendChild(node);
+            nodes.push(node);
+        }
+
+        // יצירת קווים מחברים
+        function createConnections() {
+            // הסרת קווים קיימים
+            const existingConnections = document.querySelectorAll('.connection');
+            existingConnections.forEach(conn => conn.remove());
+            
+            // יצירת קווים חדשים
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const node1 = nodes[i];
+                    const node2 = nodes[j];
+                    
+                    const x1 = parseFloat(node1.style.left);
+                    const y1 = parseFloat(node1.style.top);
+                    const x2 = parseFloat(node2.style.left);
+                    const y2 = parseFloat(node2.style.top);
+                    
+                    const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+                    
+                    // יצירת קשר רק אם המרחק קטן מסף מסוים
+                    if (distance < 20) {
+                        const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+                        const length = distance;
+                        
+                        const connection = document.createElement('div');
+                        connection.className = 'connection';
+                        connection.style.left = x1 + '%';
+                        connection.style.top = y1 + '%';
+                        connection.style.width = length + '%';
+                        connection.style.transform = `rotate(${angle}deg)`;
+                        connection.style.opacity = (1 - distance/20) * 0.5;
+                        
+                        connections.appendChild(connection);
+                    }
+                }
+            }
+        }
+
+        // יצירת הקשרים הראשונית
+        createConnections();
+
+        // עדכון הקשרים כל 2 שניות
+        setInterval(() => {
+            // הזזת הנקודות מעט
+            nodes.forEach(node => {
+                const currentLeft = parseFloat(node.style.left);
+                const currentTop = parseFloat(node.style.top);
+                
+                node.style.left = (currentLeft + (Math.random() - 0.5) * 2) + '%';
+                node.style.top = (currentTop + (Math.random() - 0.5) * 2) + '%';
+            });
+            
+            createConnections();
+        }, 2000);
+    </script>
+
+    <div class="header">
+        <h1>Agam Space!</h1>
+    </div>
+
+    <div class="container">
+        <!-- YouTube -->
+        <div class="card youtube">
+            <div class="card-inner">
+                <a href="https://youtube.com/@The_Crazy_Agam-2" target="_blank" class="card-front">
+                    <div class="icon-container">
+                        <img class="icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 159 110'%3E%3Cpath fill='%23FFFFFF' d='M154 17.5c-1.82-6.73-7.07-12-13.8-13.8-9.04-3.49-96.6-5.2-122 0.1-6.73 1.82-12 7.07-13.8 13.8C1.1 35.89 0 56.38 0 56.38S1.1 76.87 4.4 93.5c1.8 6.73 7.07 12 13.8 13.8 11.04 3.87 103 4.3 122 0 6.73-1.8 12-7.07 13.8-13.8 3.3-16.63 4.4-37.12 4.4-37.12s-1.1-20.5-4.4-37.13zM64 80V30l39.4 25L64 80z'/%3E%3C/svg%3E" alt="YouTube">
+                    </div>
+                    <div class="label">My channel</div>
+                </a>
+                <div class="card-side left"></div>
+                <div class="card-side right"></div>
+                <div class="card-side top"></div>
+                <div class="card-side bottom"></div>
+                <div class="card-side back"></div>
+            </div>
+        </div>
+
+        <!-- Discord -->
+        <div class="card discord">
+            <div class="card-inner">
+                <a href="https://discord.gg/parlamentum" target="_blank" class="card-front">
+                    <div class="icon-container">
+                        <img class="icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 127.14 96.36'%3E%3Cpath fill='%23FFFFFF' d='M107.7 8.07A105.15 105.15 0 0 0 81.47 0a72.06 72.06 0 0 0-3.36 6.83 97.68 97.68 0 0 0-29.11 0A72.37 72.37 0 0 0 45.64 0a105.89 105.89 0 0 0-26.25 8.09C2.79 32.65-1.71 56.6.54 80.21a105.73 105.73 0 0 0 32.17 16.15 77.7 77.7 0 0 0 6.89-11.11 68.42 68.42 0 0 1-10.85-5.18c.91-.66 1.8-1.34 2.66-2a75.57 75.57 0 0 0 64.32 0c.87.71 1.76 1.39 2.66 2a68.68 68.68 0 0 1-10.87 5.19 77 77 0 0 0 6.89 11.1 105.25 105.25 0 0 0 32.19-16.14c2.64-27.38-4.51-51.11-18.9-72.15zM42.45 65.69C36.18 65.69 31 60 31 53s5-12.74 11.43-12.74S54 46 53.89 53s-5.05 12.69-11.44 12.69zm42.24 0C78.41 65.69 73.25 60 73.25 53s5-12.74 11.44-12.74S96.23 46 96.12 53s-5.04 12.69-11.43 12.69z'/%3E%3C/svg%3E" alt="Discord">
+                    </div>
+                    <div class="label">Discord</div>
+                </a>
+                <div class="card-side left"></div>
+                <div class="card-side right"></div>
+                <div class="card-side top"></div>
+                <div class="card-side bottom"></div>
+                <div class="card-side back"></div>
+            </div>
+        </div>
+
+        <!-- Minecraft -->
+        <div class="card minecraft">
+            <div class="card-inner">
+                <a href="https://parlagames.co.il/" target="_blank" class="card-front">
+                    <div class="icon-container">
+                        <img class="icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Cg%3E%3C!-- Top face (grass) --%3E%3Cpolygon points='64,32 96,48 64,64 32,48' fill='%2379C05A'/%3E%3Cpolygon points='40,50 48,46 48,54 40,58' fill='%2388D65D' opacity='0.7'/%3E%3Cpolygon points='56,42 64,38 64,46 56,50' fill='%2388D65D' opacity='0.7'/%3E%3Cpolygon points='72,46 80,42 80,50 72,54' fill='%2388D65D' opacity='0.7'/%3E%3C!-- Right face (grass side) --%3E%3Cpolygon points='64,64 96,48 96,80 64,96' fill='%235C8A3D'/%3E%3C!-- Left face (grass side) --%3E%3Cpolygon points='64,64 32,48 32,80 64,96' fill='%236FA03D'/%3E%3C!-- Dirt layer right --%3E%3Cpolygon points='64,72 96,56 96,80 64,96' fill='%23996633'/%3E%3Cpolygon points='68,74 92,62 92,78 68,90' fill='%237A5230' opacity='0.5'/%3E%3Crect x='72' y='65' width='4' height='4' fill='%23654321' opacity='0.7'/%3E%3Crect x='80' y='61' width='4' height='4' fill='%23654321' opacity='0.7'/%3E%3Crect x='76' y='75' width='4' height='4' fill='%23654321' opacity='0.7'/%3E%3C!-- Dirt layer left --%3E%3Cpolygon points='64,72 32,56 32,80 64,96' fill='%23845A33'/%3E%3Cpolygon points='60,74 36,62 36,78 60,90' fill='%236B4423' opacity='0.5'/%3E%3Crect x='44' y='65' width='4' height='4' fill='%23654321' opacity='0.7'/%3E%3Crect x='52' y='70' width='4' height='4' fill='%23654321' opacity='0.7'/%3E%3Crect x='40' y='75' width='4' height='4' fill='%23654321' opacity='0.7'/%3E%3C!-- Outline --%3E%3Cpolygon points='64,32 96,48 96,80 64,96 32,80 32,48' fill='none' stroke='%23000' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cline x1='64' y1='64' x2='96' y2='48' stroke='%23000' stroke-width='1.5'/%3E%3Cline x1='64' y1='64' x2='32' y2='48' stroke='%23000' stroke-width='1.5'/%3E%3Cline x1='64' y1='64' x2='64' y2='96' stroke='%23000' stroke-width='1.5'/%3E%3C/g%3E%3C/svg%3E" alt="Minecraft">
+                    </div>
+                    <div class="label">ParlaGames</div>
+                </a>
+                <div class="card-side left"></div>
+                <div class="card-side right"></div>
+                <div class="card-side top"></div>
+                <div class="card-side bottom"></div>
+                <div class="card-side back"></div>
+            </div>
+        </div>
+
+        <!-- Spotify -->
+        <div class="card spotify">
+            <div class="card-inner">
+                <a href="https://open.spotify.com/playlist/35BZWr9mhdSVgB1DiQLz3I?si=2cdb40ae4a9a4799" target="_blank" class="card-front">
+                    <div class="icon-container">
+                        <img class="icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 496 512'%3E%3Cpath fill='%23FFFFFF' d='M248 8C111.1 8 0 119.1 0 256s111.1 248 248 248 248-111.1 248-248S384.9 8 248 8zm100.7 364.9c-4.2 0-6.8-1.3-10.7-3.6-62.4-37.6-135-39.2-206.7-24.5-3.9 1-9 2.6-11.9 2.6-9.7 0-15.8-7.7-15.8-15.8 0-10.3 6.1-15.2 13.6-16.8 81.9-18.1 165.6-16.5 237 26.2 6.1 3.9 9.7 7.4 9.7 16.5s-7.1 15.4-15.2 15.4zm26.9-65.6c-5.2 0-8.7-2.3-12.3-4.2-62.5-37-155.7-51.9-238.6-29.4-4.8 1.3-7.4 2.6-11.9 2.6-10.7 0-19.4-8.7-19.4-19.4s5.2-17.8 15.5-20.7c27.8-7.8 56.2-13.6 97.8-13.6 64.9 0 127.6 16.1 177 45.5 8.1 4.8 11.3 11 11.3 19.7-.1 10.8-8.5 19.5-19.4 19.5zm31-76.2c-5.2 0-8.4-1.3-12.9-3.9-71.2-42.5-198.5-52.7-280.9-29.7-3.6 1-8.1 2.6-12.9 2.6-13.2 0-23.3-10.3-23.3-23.6 0-13.6 8.4-21.3 17.4-23.9 35.2-10.3 74.6-15.2 117.5-15.2 73 0 149.5 15.2 205.4 47.8 7.8 4.5 12.9 10.7 12.9 22.6 0 13.6-11 23.3-23.2 23.3z'/%3E%3C/svg%3E" alt="Spotify">
+                    </div>
+                    <div class="label">Spotify</div>
+                </a>
+                <div class="card-side left"></div>
+                <div class="card-side right"></div>
+                <div class="card-side top"></div>
+                <div class="card-side bottom"></div>
+                <div class="card-side back"></div>
+            </div>
+        </div>
+
+        <!-- NameMC -->
+        <div class="card namemc">
+            <div class="card-inner">
+                <a href="https://namemc.com/profile/The_Crazy_Agam" target="_blank" class="card-front">
+                    <div class="icon-container">
+                        <img class="icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23FFFFFF' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9c.83 0 1.5-.67 1.5-1.5S7.83 8 7 8s-1.5.67-1.5 1.5S6.17 11 7 11zm3-4c.83 0 1.5-.67 1.5-1.5S10.83 4 10 4s-1.5.67-1.5 1.5S9.17 6 10 6zm3 8c.83 0 1.5-.67 1.5-1.5S13.83 11 13 11s-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm3-4c.83 0 1.5-.67 1.5-1.5S16.83 8 16 8s-1.5.67-1.5 1.5.67 1.5 1.5 1.5z'/%3E%3C/svg%3E" alt="NameMC">
+                    </div>
+                    <div class="label">NameMC</div>
+                </a>
+                <div class="card-side left"></div>
+                <div class="card-side right"></div>
+                <div class="card-side top"></div>
+                <div class="card-side bottom"></div>
+                <div class="card-side back"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // אפקט מעקב עכבר על הכרטיסים
+        document.querySelectorAll('.card').forEach(card => {
+            const cardFront = card.querySelector('.card-front');
+            
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                
+                cardFront.style.setProperty('--mouse-x', x + '%');
+                cardFront.style.setProperty('--mouse-y', y + '%');
+                
+                // הטיית הכרטיס לפי מיקום העכבר
+                const xRotation = ((y - 50) / 50) * 10;
+                const yRotation = ((x - 50) / 50) * -10;
+                
+                card.style.transform = `translateY(-30px) rotateX(${15 + xRotation}deg) rotateY(${yRotation}deg) scale(1.08)`;
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = '';
+            });
+        });
+    </script>
+</body>
+</html>
